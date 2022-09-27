@@ -5,7 +5,7 @@ import numpy as np
 
 # width = 0.4
 import pandas as pd
-from matplotlib.ticker import MultipleLocator, NullLocator
+from matplotlib.ticker import MultipleLocator, NullLocator, FixedLocator, IndexLocator
 
 current_datetime = datetime.now()
 
@@ -61,43 +61,66 @@ def get_gdp_data():
 
     conn = connect(param_dic)
     column_names = ['Part_no', 'part_name_rus', 'd_order_dnp', 'stock', 'cur_month and cur_day']
-    partnumber = '2630035505'
+    partnumber = '86640F1500'
 
     # 2630035505
     queryset = f"""SELECT part_no, part_name_rus, d_order_dnp, stock, cur_day from kmr_dayly WHERE PART_NO = '{partnumber}' AND cur_month > '{current_datetime.month}'-1 order by cur_month desc, cur_day desc"""
-    # queryset = f"""SELECT part_no, part_name_rus, d_order_dnp, stock, cur_day||'.'||cur_month from kmr_dayly WHERE PART_NO ='{partnumber}' order by cur_month desc, cur_day desc"""
-    df = postgresql_to_dataframe(conn, queryset, column_names)
-    date = []
-    stock_a_day = []
 
-    partname = ''
-    for x in df["part_name_rus"]:
+    df_1 = postgresql_to_dataframe(conn, queryset, column_names)
+    queryset2 = f"""SELECT part_no, part_name_rus, d_order_dnp, stock, cur_day||'.'||cur_month from kmr_dayly WHERE PART_NO ='{partnumber}' order by cur_month desc, cur_day desc"""
+    df_2 = postgresql_to_dataframe(conn, queryset2, column_names)
+    print(df_2)
+    print()
+    print(df_1)
+    date = []
+    date2 = []
+    stock_a_day = []
+    stock_a_day2 = []
+
+    #partname = ''
+    for x in df_1["part_name_rus"]:
         partname = x
         new_part_name = partname.rstrip()
         break
 
-    for x in df["stock"]:
+    for x in df_1["stock"]:
         stock_a_day.append(x)
+    for y in df_2["stock"]:
+        stock_a_day2.append(y)
 
-    for y in df["cur_month and cur_day"]:
-        date.append(y)
+    for z in df_1["cur_month and cur_day"]:
+        date.append(z)
+    for r in df_2["cur_month and cur_day"]:
+        date2.append(r)
 
-    draw_plot(date, stock_a_day, partnumber, new_part_name)
-    return df
+    print(len(date2))
+    print(len(stock_a_day2))
+
+    draw_plot(date, date2, stock_a_day, stock_a_day2, partnumber, new_part_name)
+    #return df
 
 
-def draw_plot(data, stock, partnumber, new_part_name):
+def draw_plot(data, data2, stock, stock2, part_number, newpartname):
     data.reverse()
     stock.reverse()
+    data2.reverse()
+    stock2.reverse()
     fig = plt.figure()
-    ax = fig.add_subplot()
-    fig.suptitle(f'{partnumber} - {new_part_name}')
-    plt.xlim(0, len(data))
-
-    plt.plot(data, stock)
-
+    ax_1 = fig.add_subplot(2, 1, 1)
+    ax_2 = fig.add_subplot(3, 1, 3)
+    fig.suptitle(f'{part_number} - {newpartname}')
+    #plt.xlim(0, len(data))
+    #plt.xlabel('день текущего месяца')
+    #plt.ylabel('количество, шт')
+    ax_1.set(title='за весь период')
+    ax_2.set(title='текущий месяц', xticks=data, yticks=stock)
     plt.grid()
-
+    ax_1.xaxis.set_major_locator(IndexLocator(base=30, offset=0))
+    #ax_1.xaxis.set_major_locator(MultipleLocator(base=30))
+    ax_2.xaxis.set_major_locator(MultipleLocator(base=5))
+    ax_2.yaxis.set_major_locator(MultipleLocator(base=10))
+    ax_1.plot(data2, stock2)
+    ax_2.plot(data, stock)
     plt.show()
 
 
