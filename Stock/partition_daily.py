@@ -8,7 +8,7 @@ from openpyxl import load_workbook
 
 
 current_datetime = datetime.now()
-file_update_time = time.localtime(os.path.getmtime('free_stock.xlsx'))
+file_update_time = time.localtime(os.path.getmtime('partition_stock.xlsx'))
 if file_update_time[1] == current_datetime.month and file_update_time[2] == current_datetime.day:
     values = ()
 

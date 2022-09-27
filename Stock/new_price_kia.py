@@ -121,12 +121,12 @@ def get_gdp_data():
     df3 = postgresql_to_dataframe(conn, queryset3, column_names)
     print(df3)
     # current_file_name = 'Exist наличие КИА' + str(current_datetime.day)
-    my_file = open(f'{current_file_name}.xlsx', "w+")
+    my_file = open(f'Price_to_email/{current_file_name}.xlsx', "w+")
     # df.to_excel(f'{current_file_name}.xlsx', index=False)
     # my_file.close()
     # my_file = open(f'{current_file_name}.xlsx', "a")
     df_row_concat = pd.concat([df, df2, df3])
-    df_row_concat.to_excel(f'{current_file_name}.xlsx', index=False)
+    df_row_concat.to_excel(f'Price_to_email/{current_file_name}.xlsx', index=False)
     my_file.close()
     # return df
 
@@ -247,6 +247,6 @@ def attach_file(msg, filepath):  # Функция по добавлению ко
 # Использование функции send_email()
 addr_to = "Price@exist.ru"  # Получатель
 
-files = [f'{current_file_name}.xlsx']  # Если нужно отправить все файлы из заданной папки, нужно указать её
+files = [f'Price_to_email/{current_file_name}.xlsx']  # Если нужно отправить все файлы из заданной папки, нужно указать её
 get_gdp_data()
 send_email(addr_to, "e_kiavist", "", files)
