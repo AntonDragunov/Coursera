@@ -3,20 +3,10 @@ from datetime import datetime
 import matplotlib.pyplot as plt
 import numpy as np
 
-# width = 0.4
 import pandas as pd
-from matplotlib.ticker import MultipleLocator, NullLocator, FixedLocator, IndexLocator
+from matplotlib.ticker import MultipleLocator, IndexLocator
 
 current_datetime = datetime.now()
-
-
-# x_list = list(range(0, 5))
-# y1_list = [22, 33, 44, 22, 19]
-# # x_indexers = np.arrange(len(x_list))
-#
-#
-# plt.plot(x_list, y1_list)
-# plt.show()
 
 
 def get_gdp_data():
@@ -77,7 +67,7 @@ def get_gdp_data():
     stock_a_day = []
     stock_a_day2 = []
 
-    #partname = ''
+    # partname = ''
     for x in df_1["part_name_rus"]:
         partname = x
         new_part_name = partname.rstrip()
@@ -97,7 +87,7 @@ def get_gdp_data():
     print(len(stock_a_day2))
 
     draw_plot(date, date2, stock_a_day, stock_a_day2, partnumber, new_part_name)
-    #return df
+    # return df
 
 
 def draw_plot(data, data2, stock, stock2, part_number, newpartname):
@@ -109,14 +99,14 @@ def draw_plot(data, data2, stock, stock2, part_number, newpartname):
     ax_1 = fig.add_subplot(2, 1, 1)
     ax_2 = fig.add_subplot(3, 1, 3)
     fig.suptitle(f'{part_number} - {newpartname}')
-    #plt.xlim(0, len(data))
-    #plt.xlabel('день текущего месяца')
-    #plt.ylabel('количество, шт')
+    # plt.xlim(0, len(data))
+    # plt.xlabel('день текущего месяца')
+    # plt.ylabel('количество, шт')
     ax_1.set(title='за весь период')
     ax_2.set(title='текущий месяц', xticks=data, yticks=stock)
     plt.grid()
     ax_1.xaxis.set_major_locator(IndexLocator(base=30, offset=0))
-    #ax_1.xaxis.set_major_locator(MultipleLocator(base=30))
+    # ax_1.xaxis.set_major_locator(MultipleLocator(base=30))
     ax_2.xaxis.set_major_locator(MultipleLocator(base=5))
     ax_2.yaxis.set_major_locator(MultipleLocator(base=10))
     ax_1.plot(data2, stock2)
