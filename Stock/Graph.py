@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 import pandas as pd
-from matplotlib.ticker import MultipleLocator, IndexLocator
+from matplotlib.ticker import MultipleLocator, IndexLocator, LinearLocator, MaxNLocator
 
 current_datetime = datetime.now()
 
@@ -53,7 +53,7 @@ def get_gdp_data():
     column_names = ['Part_no', 'part_name_rus', 'd_order_dnp', 'stock', 'cur_month and cur_day']
     partnumber = '86640F1500'
 
-    # 2630035505
+    # 2630035505 86640F1500
     queryset = f"""SELECT part_no, part_name_rus, d_order_dnp, stock, cur_day from kmr_dayly WHERE PART_NO = '{partnumber}' AND cur_month > '{current_datetime.month}'-1 order by cur_month desc, cur_day desc"""
 
     df_1 = postgresql_to_dataframe(conn, queryset, column_names)
@@ -75,6 +75,7 @@ def get_gdp_data():
 
     for x in df_1["stock"]:
         stock_a_day.append(x)
+        print(type(x))
     for y in df_2["stock"]:
         stock_a_day2.append(y)
 
@@ -84,7 +85,7 @@ def get_gdp_data():
         date2.append(r)
 
     print(len(date2))
-    print(len(stock_a_day2))
+    print(stock_a_day2)
 
     draw_plot(date, date2, stock_a_day, stock_a_day2, partnumber, new_part_name)
     # return df
@@ -100,15 +101,19 @@ def draw_plot(data, data2, stock, stock2, part_number, newpartname):
     ax_2 = fig.add_subplot(3, 1, 3)
     fig.suptitle(f'{part_number} - {newpartname}')
     # plt.xlim(0, len(data))
-    # plt.xlabel('день текущего месяца')
-    # plt.ylabel('количество, шт')
+    ax_2.set_xlabel('день текущего месяца')
+    ax_2.set_ylabel('количество, шт')
+    ax_1.set_xlabel('дата, день.месяц')
+    ax_1.set_ylabel('количество, шт')
     ax_1.set(title='за весь период')
     ax_2.set(title='текущий месяц', xticks=data, yticks=stock)
     plt.grid()
-    ax_1.xaxis.set_major_locator(IndexLocator(base=30, offset=0))
-    # ax_1.xaxis.set_major_locator(MultipleLocator(base=30))
+
+    ax_2.yaxis.set_major_locator(MaxNLocator(nbins=5))
+
+    ax_1.xaxis.set_major_locator(MultipleLocator(base=30))
     ax_2.xaxis.set_major_locator(MultipleLocator(base=5))
-    ax_2.yaxis.set_major_locator(MultipleLocator(base=10))
+
     ax_1.plot(data2, stock2)
     ax_2.plot(data, stock)
     plt.show()
