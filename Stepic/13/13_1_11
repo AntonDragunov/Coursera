@@ -1,0 +1,34 @@
+from decimal import *
+
+
+num = Decimal(input())
+if -1 < num < 1:
+    sa = '0'
+z = str(num)
+sa = ''
+num_tuple = num.as_tuple()
+if num_tuple.sign == 1:
+    sa = sa + z[1:]
+else:
+    sa = sa + z
+#print(sa)
+sb = ''
+for _ in sa:
+    if _ == '.':
+        pass
+    else:
+        sb = sb + _
+        #print(_, sb)
+
+#sb = sb[:-1]
+#print(num)
+numbers = sb[:]
+
+#numbers = [Decimal(i) for i in Decimal(sb).split()]
+numbers = list(numbers)
+#print(numbers)
+maximum = max(numbers)
+minimum = min(numbers)
+#print(minimum)
+#print(maximum)
+print(int(maximum) + int(minimum))

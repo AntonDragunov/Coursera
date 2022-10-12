@@ -68,8 +68,8 @@ query = """INSERT INTO kmr_dayly (
 for row in worksheet.iter_rows(min_row=2, max_col=15, max_row=None, values_only=True):
     print(row)
     values = values + row
-    file_month = 9  # МЕСЯЦ ЗА КОТОРЫЙ ЗАГРУЖАЕТСЯ ФАЙЛ
-    file_day = 27  # ДЕНЬ ЗА КОТОРЫЙ ЗАГРУЖАЕТСЯ ФАЙЛ
+    file_month = 10  # МЕСЯЦ ЗА КОТОРЫЙ ЗАГРУЖАЕТСЯ ФАЙЛ
+    file_day = 12  # ДЕНЬ ЗА КОТОРЫЙ ЗАГРУЖАЕТСЯ ФАЙЛ
     # cur_day = 85  # current_datetime.day
     # current_datetime.month
     values = values + (current_datetime.year, file_month, file_day)

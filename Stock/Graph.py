@@ -51,7 +51,7 @@ def get_gdp_data():
 
     conn = connect(param_dic)
     column_names = ['Part_no', 'part_name_rus', 'd_order_dnp', 'stock', 'cur_month and cur_day']
-    partnumber = '86640F1500'
+    partnumber = '2630035505'
 
     # 2630035505 86640F1500
     queryset = f"""SELECT part_no, part_name_rus, d_order_dnp, stock, cur_day from kmr_dayly WHERE PART_NO = '{partnumber}' AND cur_month > '{current_datetime.month}'-1 order by cur_month desc, cur_day desc"""
