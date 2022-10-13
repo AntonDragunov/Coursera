@@ -2,6 +2,7 @@ from datetime import datetime
 
 from email.header import Header
 
+import numpy as np
 import pandas as pd
 
 current_datetime = datetime.now()
@@ -17,7 +18,7 @@ from email.mime.text import MIMEText  # Текст/HTML
 from email.mime.image import MIMEImage  # Изображения
 from email.mime.audio import MIMEAudio  # Аудио
 from email.mime.multipart import MIMEMultipart
-
+import shutil
 import email
 import os
 
@@ -121,7 +122,7 @@ def get_gdp_data():
                         join kmr_dayly ON partition_dayly.part_no = kmr_dayly.part_no
                         join vist_daily ON partition_dayly.part_no = vist_daily.part_no
                          WHERE kmr_dayly.cur_day = '{current_datetime.day}' And kmr_dayly.cur_month = '{current_datetime.month}'
-                          And kmr_dayly.stock > 0;"""
+                          And kmr_dayly.stock > 0 And Not brand in {non_sale_brands};"""
 	df = postgresql_to_dataframe(conn, queryset, column_names)
 	print(df)
 	queryset2 = f"""select partition_dayly.part_no, partition_dayly.part_name, partition_dayly.free_stock,
@@ -138,23 +139,24 @@ def get_gdp_data():
                              And Not brand in {tyre_brands} And Not brand in {non_sale_brands}
                              And partition_dayly.brand Not Like 'Kia';"""
 	# And partition_dayly.brand Not Like 'Kia'  - вырезал окончание из df3
-	queryset4 = f"""select partition_dayly.part_no, partition_dayly.part_name, partition_dayly.free_stock,
+	queryset4 = f"""select partition_dayly.part_no, partition_dayly.free_stock, partition_dayly.part_name,
                                 partition_dayly.price AS price, partition_dayly.brand, partition_dayly.time_period
                                 from public.partition_dayly
                                 join vist_daily ON partition_dayly.part_no = vist_daily.part_no
-                                 WHERE partition_dayly.time_period > 6 And brand in {tyre_brands};"""
+                                 WHERE brand in {tyre_brands};;"""
 	df2 = postgresql_to_dataframe(conn, queryset2, column_names)
 	print(df2)
 	df3 = postgresql_to_dataframe(conn, queryset3, column_names)
 	print(df3)
-	column_names2 = ['Part_no', 'part_name_rus', 'free_stock', 'price', 'brand', 'time_period']
+	
+	column_names2 = ['Part_no', 'free_stock', 'part_name_rus',  'price', 'brand', 'time_period']
 	df4 = postgresql_to_dataframe(conn, queryset4, column_names2)
-	print(df4)
-	# current_file_name = 'Exist наличие КИА' + str(current_datetime.day)
+	df4['free_stock'] = df4['free_stock'].astype(str)
+	df4['free_stock'] = df4['free_stock'].str.replace('.', ',', regex=True)
+	df4.insert(1, "пустой столбец", np.nan)
+	
 	my_file = open(f'Price_to_email/{current_file_name}.xlsx', "w+")
-	# df.to_excel(f'{current_file_name}.xlsx', index=False)
-	# my_file.close()
-	# my_file = open(f'{current_file_name}.xlsx', "a")
+	
 	df_row_concat = pd.concat([df, df2, df3])
 	
 	df_row_concat.to_excel(f'Price_to_email/{current_file_name}.xlsx', index=False)
@@ -162,7 +164,14 @@ def get_gdp_data():
 	my_file2 = open(f'Price_to_email/{current_file_name}_tyre.xlsx', "w+")
 	df4.to_excel(f'Price_to_email/{current_file_name}_tyre.xlsx', index=False)
 	my_file2.close()
-
+	try:
+		shutil.copyfile(rf'Price_to_email/{current_file_name}.xlsx', rf'\\192.168.10.117\kia\ПРАЙС\{current_file_name}.xlsx')
+	except:
+		print('недоступна конечная директория либо проблема с файлом по запчастям КИА!')
+	try:
+		shutil.copyfile(rf'Price_to_email/{current_file_name}_tyre.xlsx', rf'\\192.168.10.117\kia\ПРАЙС\{current_file_name}_tyre.xlsx')
+	except:
+		print('недоступна конечная директория либо проблема с файлом по ШИНАМ!')
 
 # def send_country_list(current_file_name):
 #     gdp_data = get_gdp_data()
@@ -217,7 +226,7 @@ def send_email(addr_to, msg_subj, msg_text, files):
 	msg = MIMEMultipart()  # Создаем сообщение
 	msg['From'] = "a.dragunov@vistauto.ru"  # Адресат
 	msg['To'] = addr_to  # Получатель
-	msg['Cc'] = "a.dragunov@vistauto.ru"  # COPY
+	msg['Cc'] = "m.lobanov@vistauto.ru"  # COPY
 	msg['Subject'] = msg_subj  # Тема сообщения
 	
 	body = msg_text  # Текст сообщения
@@ -287,6 +296,6 @@ files = [
 files2 = [f'Price_to_email/{current_file_name}_tyre.xlsx']
 get_gdp_data()
 send_email(addr_to, "e_kiavist", "", files)
-send_email(addr_to2,
-           f'Шины в неликвиде в КИА на {current_datetime.day}.{current_datetime.month}.{current_datetime.year}',
-           "", files2)
+#send_email(addr_to2,
+#           f'Шины в неликвиде в КИА на {current_datetime.day}.{current_datetime.month}.{current_datetime.year}',
+#          "", files2)
