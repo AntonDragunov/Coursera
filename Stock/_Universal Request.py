@@ -1,3 +1,4 @@
+import time
 from datetime import datetime
 import shutil
 import sys
@@ -26,7 +27,11 @@ non_sale_brands = ('MIRKA', 'Mirka/Mirlontotal', 'festol', 'Festool', 'не ук
                    'STP (STANDARTPLAST)', 'SGM', 'SGM SAAB', 'Неизвестный производитель', 'HELLA', 'G-Power', 'LAVR',
                    'Camelion', 'minamoto', 'ZALMER', 'Автомоторс', 'Alu-frost', 'KOVAX', 'Россия', 'Орехово-Зуево',
                    'CARSYSTEM')
+
+current_time_temp = time.localtime()
+current_time = f'{current_time_temp.tm_hour}_{current_time_temp.tm_min}_{current_time_temp.tm_sec}'
 current_datetime = datetime.now()
+current_date = f'{current_datetime.day}.{current_datetime.month}.{current_datetime.year}'
 param_dic = {
 	"host": '127.1.0.0',
 	"database": 'Nokian',
@@ -70,23 +75,46 @@ conn = connect(param_dic)
 
 current_file_name = 'Vist_Avto_stock' + ' ' + str(current_datetime.day) + '_' + str(current_datetime.month) + '_' + str(
 	current_datetime.year)
+
+yandex = f'marketplace-stock YAM {current_date}-{current_time}.xlsx'
+kia_tyre = f'{current_file_name}-{current_time}_tyre.xlsx'
+
 query = f"""select partition_dayly.part_no, partition_dayly.free_stock, partition_dayly.part_name,
                                 partition_dayly.price AS price, partition_dayly.brand, partition_dayly.time_period
                                 from public.partition_dayly
                                 join vist_daily ON partition_dayly.part_no = vist_daily.part_no
                                  WHERE brand in {tyre_brands};"""
-column_names2 = ['Part_no', 'free_stock', 'part_name_rus',  'price', 'brand', 'time_period']
+column_names2 = ['Part_no', 'free_stock', 'part_name_rus',  'pride', 'brand', 'time_period']
 df4 = postgresql_to_dataframe(conn, query, column_names2)
 df4['free_stock'] = df4['free_stock'].astype(str)
-df4['free_stock'] = df4['free_stock'].str.replace('.', ',', regex=True)
+df4['free_stock'] = pd.to_numeric(df4['free_stock']).astype(int)
+
 
 df4.insert(1, "пустой столбец", np.nan)
 print(df4)
-my_file2 = open(f'Price_to_email/{current_file_name}_tyre.xlsx', "w+")
-df4.to_excel(f'Price_to_email/{current_file_name}_tyre.xlsx', index=False)
+my_file2 = open(f'Price_to_email/{kia_tyre}', "w+")
+df4.to_excel(f'Price_to_email/{kia_tyre}.xlsx', index=False)
 my_file2.close()
 
+df_yandex = df4.drop(['part_name_rus',  'pride', 'brand', 'time_period'], axis=1)
 try:
-	shutil.copyfile(rf'Price_to_email/{current_file_name}_tyre.xlsx', rf'\\192.168.10.117\kia\ПРАЙС\{current_file_name}_tyre.xlsx')
+	shutil.copyfile(rf'Price_to_email/marketplace-stock YAM.xlsx', rf'Price_to_email/{yandex}')
 except:
-	print('недоступна конечная директория либо проблема с файлом по ШИНАМ!')
+	print('ФАЙЛ НЕ СКОПИРОВАН ПО КАКИМ-ТО ПРИЧИНАМ')
+
+with pd.ExcelWriter(f'Price_to_email/{yandex}',mode='a', if_sheet_exists='overlay') as writer:
+	df_yandex.to_excel(writer, sheet_name='Остатки', header=False, index=False, startrow=2, startcol=1)
+
+
+
+
+
+# try:
+# 	shutil.copyfile(rf'Price_to_email/{kia_tyre}', rf'\\192.168.10.117\kia\ПРАЙС\{kia_tyre}.xlsx')
+# except:
+# 	print('недоступна конечная директория либо проблема с файлом по ШИНАМ!')
+
+try:
+	shutil.copyfile(rf'Price_to_email/{yandex}', rf'\\192.168.10.117\kia\ПРАЙС\{yandex}')
+except:
+	print('недоступна конечная директория либо проблема с файлом по ШИНАМ ЯНДЕКС НАЛИЧИЕ!')
