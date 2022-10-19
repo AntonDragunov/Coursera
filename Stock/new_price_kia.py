@@ -112,7 +112,7 @@ def get_gdp_data():
                     ELSE partition_dayly.free_stock
                     END AS free_stock,    
                     CASE WHEN (partition_dayly.time_period) < 3 THEN round(kmr_dayly.d_order_dnp * 1.2 * 1.21, 0)
-                     WHEN (partition_dayly.time_period) > 12 THEN round(partition_dayly.price, 0)
+                     WHEN (partition_dayly.time_period) > 12 THEN round(partition_dayly.price * 0.85, 0)
                       ELSE 
                       (CASE WHEN (kmr_dayly.d_order_dnp * 1.2) > 30000 THEN round(partition_dayly.price * 1.01, 0)
                         WHEN (kmr_dayly.d_order_dnp * 1.2) > 750 THEN round(partition_dayly.price * 1.13, 0)
@@ -133,7 +133,11 @@ def get_gdp_data():
                          And kmr_dayly.cur_month = '{current_datetime.month}' And kmr_dayly.stock = 0
                           And partition_dayly.time_period > 6 And Not brand in {non_sale_brands};"""
 	queryset3 = f"""select partition_dayly.part_no, partition_dayly.part_name, partition_dayly.free_stock,
-                            partition_dayly.price AS price, partition_dayly.brand from public.partition_dayly
+						CASE WHEN (partition_dayly.time_period) > 24 THEN partition_dayly.price * 0.6
+                        WHEN (partition_dayly.time_period) > 12 THEN partition_dayly.price * 0.85
+                        ELSE partition_dayly.price
+                        END AS price,
+	                  partition_dayly.brand from public.partition_dayly
                             join vist_daily ON partition_dayly.part_no = vist_daily.part_no
                              WHERE partition_dayly.time_period > 2
                              And Not brand in {tyre_brands} And Not brand in {non_sale_brands}
@@ -168,10 +172,10 @@ def get_gdp_data():
 		shutil.copyfile(rf'Price_to_email/{current_file_name}.xlsx', rf'\\192.168.10.117\kia\ПРАЙС\{current_file_name}.xlsx')
 	except:
 		print('недоступна конечная директория либо проблема с файлом по запчастям КИА!')
-	try:
-		shutil.copyfile(rf'Price_to_email/{current_file_name}_tyre.xlsx', rf'\\192.168.10.117\kia\ПРАЙС\{current_file_name}_tyre.xlsx')
-	except:
-		print('недоступна конечная директория либо проблема с файлом по ШИНАМ!')
+	# try:
+	# 	shutil.copyfile(rf'Price_to_email/{current_file_name}_tyre.xlsx', rf'\\192.168.10.117\kia\ПРАЙС\{current_file_name}_tyre.xlsx')
+	# except:
+	# 	print('недоступна конечная директория либо проблема с файлом по ШИНАМ!')
 
 # def send_country_list(current_file_name):
 #     gdp_data = get_gdp_data()
@@ -296,6 +300,6 @@ files = [
 files2 = [f'Price_to_email/{current_file_name}_tyre.xlsx']
 get_gdp_data()
 send_email(addr_to, "e_kiavist", "", files)
-#send_email(addr_to2,
-#           f'Шины в неликвиде в КИА на {current_datetime.day}.{current_datetime.month}.{current_datetime.year}',
-#          "", files2)
+send_email(addr_to2,
+           f'Шины в неликвиде в КИА на {current_datetime.day}.{current_datetime.month}.{current_datetime.year}',
+          "", files2)

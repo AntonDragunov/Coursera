@@ -89,7 +89,8 @@ def get_gdp_data():
 	
 	queryset_m = f"""select partition_dayly_m.part_no, partition_dayly_m.part_name, partition_dayly_m.free_stock,
 	
-	          CASE WHEN partition_dayly_m.time_period < 3 THEN round(partition_dayly_m.price * 1.25, 0)
+	          CASE WHEN partition_dayly_m.time_period < 3 THEN round(partition_dayly_m.price * 1.10, 0)
+                     WHEN partition_dayly_m.time_period > 24 THEN round(partition_dayly_m.price * 0.70, 0)
                      WHEN partition_dayly_m.time_period > 12 THEN round(partition_dayly_m.price * 0.95, 0)
                       ELSE round(partition_dayly_m.price * 1.001, 0)
                         END AS price,

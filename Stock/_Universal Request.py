@@ -84,19 +84,44 @@ query = f"""select partition_dayly.part_no, partition_dayly.free_stock, partitio
                                 from public.partition_dayly
                                 join vist_daily ON partition_dayly.part_no = vist_daily.part_no
                                  WHERE brand in {tyre_brands};"""
-column_names2 = ['Part_no', 'free_stock', 'part_name_rus',  'pride', 'brand', 'time_period']
+
+query_nelikvid = f"""select partition_dayly.part_no, partition_dayly.free_stock, partition_dayly.part_name,
+                                partition_dayly.price AS price, partition_dayly.brand, partition_dayly.time_period
+                                from public.partition_dayly
+                                join vist_daily ON partition_dayly.part_no = vist_daily.part_no;"""
+
+
+column_names2 = ['Part_no', 'free_stock', 'part_name_rus',  'price', 'brand', 'time_period']
+df2 = postgresql_to_dataframe(conn, query_nelikvid, column_names2)
+with open(f'Price_to_email/Неликвид КИА.xlsx', "w+") as f:
+	df2.to_excel(f'Price_to_email/Неликвид КИА.xlsx', index=False)
+
+
+
+
+
 df4 = postgresql_to_dataframe(conn, query, column_names2)
 df4['free_stock'] = df4['free_stock'].astype(str)
 df4['free_stock'] = pd.to_numeric(df4['free_stock']).astype(int)
-
+df4['time_period'] = df4['time_period'].astype(str)
+df4['time_period'] = df4['time_period'].str.replace('.', ',', regex=True)
+df4['price'] = df4['price'].astype(str)
+df4['price'] = df4['price'].str.replace('.', ',', regex=True)
 
 df4.insert(1, "пустой столбец", np.nan)
 print(df4)
 my_file2 = open(f'Price_to_email/{kia_tyre}', "w+")
-df4.to_excel(f'Price_to_email/{kia_tyre}.xlsx', index=False)
+df4.to_excel(f'Price_to_email/{kia_tyre}', index=False)
 my_file2.close()
 
-df_yandex = df4.drop(['part_name_rus',  'pride', 'brand', 'time_period'], axis=1)
+df_yandex = df4.drop(['part_name_rus',  'price', 'brand', 'time_period'], axis=1)
+
+
+
+
+
+
+
 try:
 	shutil.copyfile(rf'Price_to_email/marketplace-stock YAM.xlsx', rf'Price_to_email/{yandex}')
 except:
