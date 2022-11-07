@@ -9,8 +9,8 @@ values = []
 
 ### ----------------НУЖНО ВСТАВИТЬ АТКУАЛЬНЫЕ ИМЕНЯ ВХОДНОГО И ВЫХОДНОГО ФАЙЛОВ
 
-input_file = 'PIK_VAZ.xlsx'
-output_file = 'PIK_VAZ_result.xlsx'
+input_file = 'GBUZ_VRKB.xlsx'
+output_file = 'GBUZ_VRKB_result.xlsx'
 
 workbook = load_workbook(f'{input_file}', read_only=True)
 worksheet = workbook['TDSheet']

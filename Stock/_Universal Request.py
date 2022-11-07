@@ -32,21 +32,23 @@ current_time_temp = time.localtime()
 current_time = f'{current_time_temp.tm_hour}_{current_time_temp.tm_min}_{current_time_temp.tm_sec}'
 current_datetime = datetime.now()
 current_date = f'{current_datetime.day}.{current_datetime.month}.{current_datetime.year}'
-param_dic = {
-	"host": '127.1.0.0',
+params_dic = {
 	"database": 'Nokian',
 	"user": 'postgres',
-	"password": '111'
+	"password": '111',
+	'port': '5432',
+	"host": '127.1.0.0'
 }
 
 
-def connect(params_dic):
+def connect(connection_data):
 	# """ Connect to the PostgreSQL database server """
 	conn = None
 	try:
 		# connect to the PostgreSQL server
 		print('Connecting to the PostgreSQL database...')
-		conn = psycopg2.connect(database="Nokian", user="postgres", password="111", host="localhost", port="5432")
+		conn = psycopg2.connect(**connection_data)
+	
 	except (Exception, psycopg2.DatabaseError) as error:
 		print(error)
 		sys.exit(1)
@@ -71,7 +73,7 @@ def postgresql_to_dataframe(conn, select_query, column_names):
 	return df
 
 
-conn = connect(param_dic)
+conn = connect(params_dic)
 
 current_file_name = 'Vist_Avto_stock' + ' ' + str(current_datetime.day) + '_' + str(current_datetime.month) + '_' + str(
 	current_datetime.year)
@@ -79,26 +81,21 @@ current_file_name = 'Vist_Avto_stock' + ' ' + str(current_datetime.day) + '_' + 
 yandex = f'marketplace-stock YAM {current_date}-{current_time}.xlsx'
 kia_tyre = f'{current_file_name}-{current_time}_tyre.xlsx'
 
-query = f"""select partition_dayly.part_no, partition_dayly.free_stock, partition_dayly.part_name,
+query = f"""select partition_dayly.part_no, vist_daily.free_stock, partition_dayly.part_name,
                                 partition_dayly.price AS price, partition_dayly.brand, partition_dayly.time_period
                                 from public.partition_dayly
                                 join vist_daily ON partition_dayly.part_no = vist_daily.part_no
                                  WHERE brand in {tyre_brands};"""
 
-query_nelikvid = f"""select partition_dayly.part_no, partition_dayly.free_stock, partition_dayly.part_name,
+query_nelikvid = f"""select partition_dayly.part_no, vist_daily.free_stock, partition_dayly.part_name,
                                 partition_dayly.price AS price, partition_dayly.brand, partition_dayly.time_period
                                 from public.partition_dayly
                                 join vist_daily ON partition_dayly.part_no = vist_daily.part_no;"""
 
-
-column_names2 = ['Part_no', 'free_stock', 'part_name_rus',  'price', 'brand', 'time_period']
+column_names2 = ['Part_no', 'free_stock', 'part_name_rus', 'price', 'brand', 'time_period']
 df2 = postgresql_to_dataframe(conn, query_nelikvid, column_names2)
 with open(f'Price_to_email/Неликвид КИА.xlsx', "w+") as f:
 	df2.to_excel(f'Price_to_email/Неликвид КИА.xlsx', index=False)
-
-
-
-
 
 df4 = postgresql_to_dataframe(conn, query, column_names2)
 df4['free_stock'] = df4['free_stock'].astype(str)
@@ -114,30 +111,20 @@ my_file2 = open(f'Price_to_email/{kia_tyre}', "w+")
 df4.to_excel(f'Price_to_email/{kia_tyre}', index=False)
 my_file2.close()
 
-df_yandex = df4.drop(['part_name_rus',  'price', 'brand', 'time_period'], axis=1)
-
-
-
-
-
-
+df_yandex = df4.drop(['part_name_rus', 'price', 'brand', 'time_period'], axis=1)
 
 try:
 	shutil.copyfile(rf'Price_to_email/marketplace-stock YAM.xlsx', rf'Price_to_email/{yandex}')
 except:
 	print('ФАЙЛ НЕ СКОПИРОВАН ПО КАКИМ-ТО ПРИЧИНАМ')
 
-with pd.ExcelWriter(f'Price_to_email/{yandex}',mode='a', if_sheet_exists='overlay') as writer:
+with pd.ExcelWriter(f'Price_to_email/{yandex}', mode='a', if_sheet_exists='overlay') as writer:
 	df_yandex.to_excel(writer, sheet_name='Остатки', header=False, index=False, startrow=2, startcol=1)
 
-
-
-
-
-# try:
-# 	shutil.copyfile(rf'Price_to_email/{kia_tyre}', rf'\\192.168.10.117\kia\ПРАЙС\{kia_tyre}.xlsx')
-# except:
-# 	print('недоступна конечная директория либо проблема с файлом по ШИНАМ!')
+try:
+	shutil.copyfile(rf'Price_to_email/{kia_tyre}', rf'\\192.168.10.117\kia\ПРАЙС\{kia_tyre}.xlsx')
+except:
+	print('недоступна конечная директория либо проблема с файлом по ШИНАМ!')
 
 try:
 	shutil.copyfile(rf'Price_to_email/{yandex}', rf'\\192.168.10.117\kia\ПРАЙС\{yandex}')

@@ -5,6 +5,9 @@ from email.header import Header
 import numpy as np
 import pandas as pd
 
+from Stock.partition_daily import get_partition
+from Stock.vist_daily import download_daily_stocks
+
 current_datetime = datetime.now()
 
 import smtplib  # Импортируем библиотеку по работе с SMTP
@@ -21,6 +24,11 @@ from email.mime.multipart import MIMEMultipart
 import shutil
 import email
 import os
+
+
+download_daily_stocks()
+
+get_partition()
 
 tyre_brands = ('BFGoodrich', 'Kormoran', 'Dunlop JP', 'Viatti',
                'Hankook', 'Goodyear', 'Nokian Tyres', 'Matador', 'Continental', 'Yokohama', 'Marshal', 'Michelin',
@@ -40,7 +48,7 @@ non_sale_brands = ('MIRKA', 'Mirka/Mirlontotal', 'festol', 'Festool', 'не ук
                    'VAG / AUDI / PORSCHE / SKODA',
                    'STP (STANDARTPLAST)', 'SGM', 'SGM SAAB', 'Неизвестный производитель', 'HELLA', 'G-Power', 'LAVR',
                    'Camelion', 'minamoto', 'ZALMER', 'Автомоторс', 'Alu-frost', 'KOVAX', 'Россия', 'Орехово-Зуево',
-                   'CARSYSTEM')
+                   'CARSYSTEM', 'Toshiba')
 
 
 def get_gdp_data():
@@ -112,7 +120,7 @@ def get_gdp_data():
                     ELSE partition_dayly.free_stock
                     END AS free_stock,    
                     CASE WHEN (partition_dayly.time_period) < 3 THEN round(kmr_dayly.d_order_dnp * 1.2 * 1.21, 0)
-                     WHEN (partition_dayly.time_period) > 12 THEN round(partition_dayly.price * 0.85, 0)
+                     WHEN (partition_dayly.time_period) > 12 THEN round(partition_dayly.price * 0.80, 0)
                       ELSE 
                       (CASE WHEN (kmr_dayly.d_order_dnp * 1.2) > 30000 THEN round(partition_dayly.price * 1.01, 0)
                         WHEN (kmr_dayly.d_order_dnp * 1.2) > 750 THEN round(partition_dayly.price * 1.13, 0)
@@ -134,7 +142,7 @@ def get_gdp_data():
                           And partition_dayly.time_period > 6 And Not brand in {non_sale_brands};"""
 	queryset3 = f"""select partition_dayly.part_no, partition_dayly.part_name, partition_dayly.free_stock,
 						CASE WHEN (partition_dayly.time_period) > 24 THEN partition_dayly.price * 0.6
-                        WHEN (partition_dayly.time_period) > 12 THEN partition_dayly.price * 0.85
+                        WHEN (partition_dayly.time_period) > 12 THEN partition_dayly.price * 0.75
                         ELSE partition_dayly.price
                         END AS price,
 	                  partition_dayly.brand from public.partition_dayly

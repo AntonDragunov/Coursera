@@ -5,6 +5,8 @@ from email.header import Header
 import numpy as np
 import pandas as pd
 
+from Stock.partition_daily_m import get_partition_m
+
 current_datetime = datetime.now()
 
 import smtplib  # Импортируем библиотеку по работе с SMTP
@@ -21,6 +23,14 @@ from email.mime.multipart import MIMEMultipart
 import shutil
 import email
 import os
+
+
+import partition_daily_m
+partition_daily_m.get_partition_m()
+
+import vist_daily_m
+vist_daily_m.download_daily_stocks_m()
+
 
 tyre_brands = ('BFGoodrich', 'Kormoran', 'Dunlop JP', 'Viatti',
                'Hankook', 'Goodyear', 'Nokian Tyres', 'Matador', 'Continental', 'Yokohama', 'Marshal', 'Michelin',
@@ -89,9 +99,9 @@ def get_gdp_data():
 	
 	queryset_m = f"""select partition_dayly_m.part_no, partition_dayly_m.part_name, partition_dayly_m.free_stock,
 	
-	          CASE WHEN partition_dayly_m.time_period < 3 THEN round(partition_dayly_m.price * 1.10, 0)
+	          CASE WHEN partition_dayly_m.time_period < 3 THEN round(partition_dayly_m.price * 1.05, 0)
                      WHEN partition_dayly_m.time_period > 24 THEN round(partition_dayly_m.price * 0.70, 0)
-                     WHEN partition_dayly_m.time_period > 12 THEN round(partition_dayly_m.price * 0.95, 0)
+                     WHEN partition_dayly_m.time_period > 12 THEN round(partition_dayly_m.price * 0.90, 0)
                       ELSE round(partition_dayly_m.price * 1.001, 0)
                         END AS price,
 	                
@@ -225,3 +235,5 @@ send_email(addr_to, "e_vist", "", files)
 # send_email(addr_to2,
 #           f'Шины в неликвиде в КИА на {current_datetime.day}.{current_datetime.month}.{current_datetime.year}',
 #          "", files2)
+
+
