@@ -1,5 +1,6 @@
 import os
 import smtplib
+import sys
 from datetime import datetime
 import shutil
 import time
@@ -109,12 +110,10 @@ print("Mission complete!")
 import pandas as pd
 df = pd.read_excel(rf'C:\Users\user\PycharmProjects\Coursera\Stock\Price_to_email\{stock_nokian_filename}')
 df.to_excel(rf'C:\Users\user\PycharmProjects\Coursera\Stock\Price_to_email\{stock_nokian_filename}x')
-
+os.remove(rf'C:\Users\user\PycharmProjects\Coursera\Stock\Price_to_email\{stock_nokian_filename}')
 
 #---------ИМОРТ ФАЙЛА В БАЗУ-----------------
-values = ()
-workbook = load_workbook(rf'C:\Users\user\PycharmProjects\Coursera\Stock\Price_to_email\{stock_nokian_filename}x', read_only=True)
-worksheet = workbook['Sheet1']
+
 
 current_datetime = datetime.now()
 database = psycopg2.connect(database="Nokian", user="postgres", password="111", host="localhost", port="5432")
@@ -127,7 +126,9 @@ database.commit()
 
 
 #-----------------------------------------------------------------------------------------
-
+values = ()
+workbook = load_workbook(rf'C:\Users\user\PycharmProjects\Coursera\Stock\Price_to_email\{stock_nokian_filename}x', read_only=True)
+worksheet = workbook['Sheet1']
 
 cursor = database.cursor()
 query = """INSERT INTO nokian_dayly (
@@ -152,8 +153,8 @@ query = """INSERT INTO nokian_dayly (
 for row in worksheet.iter_rows(min_row=3, min_col=2, max_col=16, max_row=None, values_only=True):
 	print(row)
 	values = values + row
-	file_month = 11  # МЕСЯЦ ЗА КОТОРЫЙ ЗАГРУЖАЕТСЯ ФАЙЛ
-	file_day = 7  # ДЕНЬ ЗА КОТОРЫЙ ЗАГРУЖАЕТСЯ ФАЙЛ
+	file_month = current_datetime.month  # МЕСЯЦ ЗА КОТОРЫЙ ЗАГРУЖАЕТСЯ ФАЙЛ
+	file_day = current_datetime.day  # ДЕНЬ ЗА КОТОРЫЙ ЗАГРУЖАЕТСЯ ФАЙЛ
 	# cur_day = 85  # current_datetime.day
 	# current_datetime.month
 	values = values + (current_datetime.year, file_month, file_day)
@@ -169,12 +170,18 @@ database.commit()
 
 
 cursor = database.cursor()
+# query = f"""select partnumber, '', quantity_msk_sod
+# 			from nokian_dayly where cur_month = {current_datetime.month} and cur_day= {current_datetime.day} and quantity_msk_sod > 0 and not tyre_model ilike '%nordman%'
+# 			and diameter = '15'
+# 			union
+# 			select partnumber,  '', quantity_msk_sod
+# 			from nokian_dayly where cur_month = {current_datetime.month} and cur_day= {current_datetime.day} and quantity_msk_sod > 0 and diameter > '15';"""
+
 query = f"""select partnumber, '', quantity_msk_sod
-			from nokian_dayly where cur_month = {current_datetime.month} and cur_day= {current_datetime.day} and quantity_msk_sod > 0 and not tyre_model ilike '%nordman%'
-			and diameter = '15'
-			union
-			select partnumber,  '', quantity_msk_sod
-			from nokian_dayly where cur_month = {current_datetime.month} and cur_day= {current_datetime.day} and quantity_msk_sod > 0 and diameter > '15';"""
+			from nokian_dayly where cur_month = {current_datetime.month} and cur_day= {current_datetime.day} and quantity_msk_sod > 0;"""
+
+
+
 yandex_nokian = f'marketplace-stock NOKIAN {current_date}-{current_time}.xlsx'
 column_names = ['partnumber', 'free', 'quantity_msk_sod']
 df_nokian = postgresql_to_dataframe(conn, query, column_names)
@@ -221,4 +228,4 @@ def send_email(addr_to, msg_subj, msg_text):
     server.quit()  # Выходим
 
 
-send_email(mail_for_who, final_msg, "")
+#send_email(mail_for_who, final_msg, "")

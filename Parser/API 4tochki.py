@@ -3,9 +3,15 @@ from collections import OrderedDict
 import requests
 from bs4 import BeautifulSoup
 
-params = {'login': 'sa30716', 'password': 's4ktKFX-pN', 'code_list': ['774942']}
-response = requests.get("http://api-b2b.4tochki.ru/WCF/ClientService.svc?wsdl", params=params)
-print(response.text)
+params = {'login': 'sa30716', 'password': 's4ktKFX-pN', 'code_list': ['R1147']}
+params2 = {'login': 'sa30716', 'password': 's4ktKFX-pN', 'orderNumber': 'F8546660'}
+
+orderProducts = {"code" : 'R1147', "quantity" : 1, "wrh" : 1}
+params3 = {'login': 'sa30716', 'password': 's4ktKFX-pN', 'order': f'{orderProducts}'}
+params4 = {'login': 'sa30716', 'password': 's4ktKFX-pN'}
+params5 = {'login': 'sa30716', 'password': 's4ktKFX-pN', 'marka': 'CHERY'}
+params6 = {'login': 'sa30716', 'password': 's4ktKFX-pN', 'marka': 'CHERY', 'model' : 'Tiggo 4','year_beg' : 2020 ,
+            'year_end' : 2022}
 #sa30716
 #s4ktKFX-pN
 
@@ -43,8 +49,21 @@ def get_soap():
         transport=Transport(session=session)
     )
 
-    request = client.service.GetGoodsInfo(**params)
+    request = client.service.GetGoodsInfo(**params) #получение информация по артикулу
+    request2 = client.service.GetOrderInfo(**params2) #получение информации по заказу
+    #request3 = client.service.CreateOrder(**params3)
+    request4 = client.service.GetMarkaAvto(**params4)
+    request5 = client.service.GetModelAvto(**params5)
+    request6 = client.service.GetModificationAvto(**params6)
+    
+    
+    
     print(request)
+    print(...)
+    print(request2)
+    print(request4)
+    print(request5)
+    print(request6)
     #result = eval(request)  # Предобразование строки в список словарей
     #data = request.json()
     return
